@@ -546,6 +546,7 @@ class SuperVillain(Villain):
 
 class FunkyTag(models.Model):
     "Because we all know there's only one real use case for GFKs."
+
     name = models.CharField(max_length=25)
     content_type = models.ForeignKey(ContentType, models.CASCADE)
     object_id = models.PositiveIntegerField()
@@ -971,6 +972,12 @@ class City(models.Model):
 class Restaurant(models.Model):
     city = models.ForeignKey(City, models.CASCADE)
     name = models.CharField(max_length=100)
+
+    class Meta:
+        verbose_name = (
+            "very very very very very very very very very "
+            "loooooooooooooooooooooooooooooooooooooooooong name"
+        )
 
     def get_absolute_url(self):
         return "/dummy/%s/" % self.pk

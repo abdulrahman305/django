@@ -170,7 +170,11 @@ spelling:
 
 black:
 	@mkdir -p $(BUILDDIR)/black
-	find -name "*.txt" -not -path "./_build/*" -not -path "./_theme/*" \
+	find . -name "*.txt" -not -path "./_build/*" -not -path "./_theme/*" \
 		| xargs blacken-docs --rst-literal-block; echo $$? > "$(BUILDDIR)/black/output.txt"
 	@echo
 	@echo "Code blocks reformatted"
+
+check: spelling black
+	@echo
+	@echo "Style and spelling checks completed."
