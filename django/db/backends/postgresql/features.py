@@ -11,6 +11,7 @@ class DatabaseFeatures(BaseDatabaseFeatures):
     allows_group_by_selected_pks = True
     can_return_columns_from_insert = True
     can_return_rows_from_bulk_insert = True
+    can_return_rows_from_update = True
     has_real_datatype = True
     has_native_uuid_field = True
     has_native_duration_field = True
@@ -121,6 +122,15 @@ class DatabaseFeatures(BaseDatabaseFeatures):
                     # server-side binding cursors (#34255).
                     "aggregation.tests.AggregateTestCase."
                     "test_group_by_nested_expression_with_params",
+                }
+            )
+        if not is_psycopg3:
+            expected_failures.update(
+                {
+                    # operator does not exist: bigint[] = integer[]
+                    "postgres_tests.test_array.TestQuerying.test_gt",
+                    "postgres_tests.test_array.TestQuerying.test_in",
+                    "postgres_tests.test_array.TestQuerying.test_lt",
                 }
             )
         return expected_failures

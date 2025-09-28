@@ -10,7 +10,6 @@ all about the internals of models in order to get the information it needs.
 import copy
 import difflib
 import functools
-import inspect
 import sys
 import warnings
 from collections import Counter, namedtuple
@@ -44,7 +43,7 @@ from django.db.models.query_utils import (
 from django.db.models.sql.constants import INNER, LOUTER, ORDER_DIR, SINGLE
 from django.db.models.sql.datastructures import BaseTable, Empty, Join, MultiJoin
 from django.db.models.sql.where import AND, OR, ExtraWhere, NothingNode, WhereNode
-from django.utils.deprecation import RemovedInDjango70Warning
+from django.utils.deprecation import RemovedInDjango70Warning, django_file_prefixes
 from django.utils.functional import cached_property
 from django.utils.regex_helper import _lazy_re_compile
 from django.utils.tree import Node
@@ -1216,15 +1215,10 @@ class Query(BaseExpression):
     def check_alias(self, alias):
         # RemovedInDjango70Warning: When the deprecation ends, remove.
         if "%" in alias:
-            if "aggregate" in {frame.function for frame in inspect.stack()}:
-                stacklevel = 5
-            else:
-                # annotate() and alias().
-                stacklevel = 6
             warnings.warn(
                 "Using percent signs in a column alias is deprecated.",
-                stacklevel=stacklevel,
                 category=RemovedInDjango70Warning,
+                skip_file_prefixes=django_file_prefixes(),
             )
         if FORBIDDEN_ALIAS_PATTERN.search(alias):
             raise ValueError(
@@ -1249,12 +1243,11 @@ class Query(BaseExpression):
 
     @property
     def _subquery_fields_len(self):
-        if self.has_select_fields:
-            return sum(
-                len(self.model._meta.pk_fields) if field == "pk" else 1
-                for field in self.selected
-            )
-        return len(self.model._meta.pk_fields)
+        if not self.has_select_fields or not self.select:
+            return len(self.model._meta.pk_fields)
+        return len(self.select) + sum(
+            len(expr.targets) - 1 for expr in self.select if isinstance(expr, ColPairs)
+        )
 
     def resolve_expression(self, query, *args, **kwargs):
         clone = self.clone()
@@ -1720,6 +1713,7 @@ class Query(BaseExpression):
         return target_clause, needed_inner
 
     def add_filtered_relation(self, filtered_relation, alias):
+        self.check_alias(alias)
         filtered_relation.alias = alias
         relation_lookup_parts, relation_field_parts, _ = self.solve_lookup_type(
             filtered_relation.relation_name
@@ -1823,7 +1817,7 @@ class Query(BaseExpression):
                     available = sorted(
                         [
                             *get_field_names_from_opts(opts),
-                            *self.annotation_select,
+                            *self.annotations,
                             *self._filtered_relations,
                         ]
                     )
@@ -2269,8 +2263,21 @@ class Query(BaseExpression):
                     join_info.joins,
                     join_info.path,
                 )
-                for target in targets:
-                    cols.append(join_info.transform_function(target, final_alias))
+                if len(targets) > 1:
+                    transformed_targets = [
+                        join_info.transform_function(target, final_alias)
+                        for target in targets
+                    ]
+                    cols.append(
+                        ColPairs(
+                            final_alias if self.alias_cols else None,
+                            [col.target for col in transformed_targets],
+                            [col.output_field for col in transformed_targets],
+                            join_info.final_field,
+                        )
+                    )
+                else:
+                    cols.append(join_info.transform_function(targets[0], final_alias))
             if cols:
                 self.set_select(cols)
         except MultiJoin:

@@ -1105,8 +1105,6 @@ Example of a full DSN string::
 Connection pool
 ---------------
 
-.. versionadded:: 5.2
-
 To use a connection pool with `oracledb`_, set ``"pool"`` to ``True`` in the
 :setting:`OPTIONS` part of your database configuration. This uses the driver's
 `create_pool()`_ default values::
@@ -1283,6 +1281,7 @@ by 3rd parties that allow you to use other databases with Django:
 * :pypi:`Firebird <django-firebird>`
 * :pypi:`Google Cloud Spanner <django-google-spanner>`
 * :pypi:`Microsoft SQL Server <mssql-django>`
+* :pypi:`MongoDB <django-mongodb-backend>`
 * :pypi:`Snowflake <django-snowflake>`
 * :pypi:`TiDB <django-tidb>`
 * :pypi:`YugabyteDB <django-yugabytedb>`
