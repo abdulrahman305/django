@@ -244,6 +244,9 @@ class TestUtilsHtml(SimpleTestCase):
                 "paragraph separator:\\u2029and line separator:\\u2028",
             ),
             ("`", "\\u0060"),
+            ("\u007f", "\\u007F"),
+            ("\u0080", "\\u0080"),
+            ("\u009f", "\\u009F"),
         )
         for value, output in items:
             with self.subTest(value=value, output=output):
@@ -454,6 +457,10 @@ class TestUtilsHtml(SimpleTestCase):
                 "idna-2008@މިހާރު.example.mv",
                 '<a href="mailto:idna-2008@%DE%89%DE%A8%DE%80%DE%A7%DE%83%DE%AA.ex'
                 'ample.mv">idna-2008@މިހާރު.example.mv</a>',
+            ),
+            (
+                "host.djangoproject.com",
+                '<a href="https://host.djangoproject.com">host.djangoproject.com</a>',
             ),
         )
         for value, output in tests:

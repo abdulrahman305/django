@@ -383,6 +383,9 @@ class BaseDatabaseFeatures:
     # Does the backend support unlimited character columns?
     supports_unlimited_charfield = False
 
+    # Does the backend support numeric columns with no precision?
+    supports_no_precision_decimalfield = False
+
     # Does the backend support native tuple lookups (=, >, <, IN)?
     supports_tuple_lookups = True
 
@@ -390,8 +393,10 @@ class BaseDatabaseFeatures:
     # subqueries?
     supports_tuple_comparison_against_subquery = True
 
-    # Does the backend support DEFAULT as delete option?
+    # Does the backend support CASCADE, DEFAULT, NULL as delete options?
+    supports_on_delete_db_cascade = True
     supports_on_delete_db_default = True
+    supports_on_delete_db_null = True
 
     # Collation names for use by the Django test suite.
     test_collations = {
